@@ -110,110 +110,155 @@ void startWebSocketClient() {
     client.run();
 }
 
+#include <unordered_map>
+#include <functional>
+
+// Define actions
+enum Action {
+    PLACE_ORDER,
+    CANCEL_ORDER,
+    MODIFY_ORDER,
+    GET_ORDERBOOK,
+    GET_POSITIONS,
+    EXIT
+};
+
+// Convert user input to action
+Action parseAction(const std::string& input) {
+    static std::unordered_map<std::string, Action> actionMap = {
+        {"place", PLACE_ORDER},
+        {"cancel", CANCEL_ORDER},
+        {"modify", MODIFY_ORDER},
+        {"orderbook", GET_ORDERBOOK},
+        {"positions", GET_POSITIONS},
+        {"exit", EXIT}
+    };
+    return actionMap.count(input) ? actionMap[input] : EXIT;
+}
+
+void orderManagementSystem(OrderManager& orderManager) {
+    while (true) {
+        std::cout << "\nChoose an action:\n";
+        std::cout << "1. Place order (type 'place')\n";
+        std::cout << "2. Cancel order (type 'cancel')\n";
+        std::cout << "3. Modify order (type 'modify')\n";
+        std::cout << "4. Get orderbook (type 'orderbook')\n";
+        std::cout << "5. View positions (type 'positions')\n";
+        std::cout << "6. Exit (type 'exit')\n";
+        std::cout << "Enter choice: ";
+
+        std::string userInput;
+        std::cin >> userInput;
+
+        Action action = parseAction(userInput);
+        switch (action) {
+            case PLACE_ORDER: {
+                std::string symbol, side, type;
+                double amount, price;
+                std::cout << "Enter instrument (e.g., BTC-PERPETUAL): ";
+                std::cin >> symbol;
+                std::cout << "Enter side (buy/sell): ";
+                std::cin >> side;
+                std::cout << "Enter amount: ";
+                std::cin >> amount;
+                std::cout << "Enter price: ";
+                std::cin >> price;
+                std::cout << "Enter type (limit/market): ";
+                std::cin >> type;
+
+                auto start = std::chrono::high_resolution_clock::now();
+                std::string response = orderManager.placeOrder(symbol, side, amount, price, type);
+                auto end = std::chrono::high_resolution_clock::now();
+
+                auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
+                break;
+            }
+            case CANCEL_ORDER: {
+                std::string orderId;
+                std::cout << "Enter order ID to cancel: ";
+                std::cin >> orderId;
+
+                auto start = std::chrono::high_resolution_clock::now();
+                std::string response = orderManager.cancelOrder(orderId);
+                auto end = std::chrono::high_resolution_clock::now();
+
+                auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
+                break;
+            }
+            case MODIFY_ORDER: {
+                std::string orderId;
+                double newAmount, newPrice;
+                std::cout << "Enter order ID to modify: ";
+                std::cin >> orderId;
+                std::cout << "Enter new amount: ";
+                std::cin >> newAmount;
+                std::cout << "Enter new price: ";
+                std::cin >> newPrice;
+
+                auto start = std::chrono::high_resolution_clock::now();
+                std::string response = orderManager.modifyOrder(orderId, newAmount, newPrice);
+                auto end = std::chrono::high_resolution_clock::now();
+
+                auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
+                break;
+            }
+            case GET_ORDERBOOK: {
+                std::string symbol;
+                std::cout << "Enter instrument for orderbook (e.g., BTC-PERPETUAL): ";
+                std::cin >> symbol;
+
+                std::string response = orderManager.getOrderBook(symbol);
+                std::cout << "Orderbook: " << response << "\n";
+                break;
+            }
+            case GET_POSITIONS: {
+                std::string currency;
+                std::cout << "Enter currency (e.g., BTC): ";
+                std::cin >> currency;
+
+                std::string response = orderManager.getCurrentPositions(currency);
+                std::cout << "Positions: " << response << "\n";
+                break;
+            }
+            case EXIT: {
+                std::cout << "Exiting order management system...\n";
+                return;
+            }
+            default:
+                std::cout << "Invalid action. Please try again.\n";
+                break;
+        }
+    }
+}
+
 int main() {
-    OrderManager orderManager;
     //examples
+    //"USDC_USDT", "buy", 10.0, 350.0,"market"
+    //"BTC-PERPETUAL", "buy", 10.0, 350.0,"limit"
     //spot= STETH_USDC
     //future= BTC-PERPETUAL
     //option= ETH-26SEP25-19000-C
     try {
+        OrderManager orderManager;
+        std::string API_KEY,SERCET_KEY;
+        std::cout<<"Enter your account credentials to authenticate\n";
+        std::cout<<"Enter your API Key: ";
+        std::cin>>API_KEY;
+        std::cout<<std::endl;
+        std::cout<<"Enter your Secret Key: ";
+        std::cin>>SERCET_KEY;
+        std::cout<<std::endl;
         std::string token = UtilityNamespace::authenticate();
-        // std::cout << "Token: " << token << std::endl;
+        std::cout << "Authenticated successfully.\nToken: " << token << "\n";
 
-        // Place an order
-        auto start = std::chrono::high_resolution_clock::now();
-        std::string response1 = orderManager.placeOrder("STETH_USDC", "buy", 10.0, 300.0,"market");
-        auto end = std::chrono::high_resolution_clock::now();
-        auto orderPlacementLatency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        std::cout << "Order Placement Latency: " << orderPlacementLatency << " ms" << std::endl;
-        auto jsonResponse = nlohmann::json::parse(response1);
-        std::string orderId = jsonResponse["result"]["order"]["order_id"];
-        std::cout << "Order placed successfully!" << std::endl;
-        std::cout << "Order ID: " << orderId << std::endl;
-        std::cout << "Instrument: " << jsonResponse["result"]["order"]["instrument_name"] << std::endl;
-        // std::cout << "Direction: " << jsonResponse["result"]["order"]["direction"] << std::endl;
-        std::cout << "Price: " << jsonResponse["result"]["order"]["price"] << std::endl;
-        std::cout << "Amount: " << jsonResponse["result"]["order"]["amount"] << std::endl;
-        std::cout << "Order State: " << jsonResponse["result"]["order"]["order_state"] << std::endl;
-        // std::cout << "Creation Timestamp: " << jsonResponse["result"]["order"]["creation_timestamp"] << std::endl;
-        std::cout << std::endl;
+        orderManagementSystem(orderManager);
 
-        // Modify an order
-        std::string response3 = orderManager.modifyOrder(orderId, 10.0, 400.0);
-        auto jsonResponseModify = nlohmann::json::parse(response3);
-        std::cout << "Order modified successfully!" << std::endl;
-        std::cout << "Order ID: " << jsonResponseModify["result"]["order"]["order_id"] << std::endl;
-        std::cout << "New Price: " << jsonResponseModify["result"]["order"]["price"] << std::endl;
-        std::cout << "New Amount: " << jsonResponseModify["result"]["order"]["amount"] << std::endl;
-        std::cout << "Order State: " << jsonResponseModify["result"]["order"]["order_state"] << std::endl;
-        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
 
-        // Get Order Book
-        std::string response4 = orderManager.getOrderBook("BTC-PERPETUAL");
-        auto jsonResponseOrderBook = nlohmann::json::parse(response4);
-        std::cout << "Order Book for " << jsonResponseOrderBook["result"]["instrument_name"] << ":" << std::endl;
-        // std::cout << "Timestamp: " << jsonResponseOrderBook["result"]["timestamp"] << std::endl;
-        std::cout << "Last Price: " << jsonResponseOrderBook["result"]["last_price"] << std::endl;
-        std::cout << "Best Bid Price: " << jsonResponseOrderBook["result"]["best_bid_price"] << " (Amount: " << jsonResponseOrderBook["result"]["best_bid_amount"] << ")" << std::endl;
-        std::cout << "Best Ask Price: " << jsonResponseOrderBook["result"]["best_ask_price"] << " (Amount: " << jsonResponseOrderBook["result"]["best_ask_amount"] << ")" << std::endl;
-
-        std::cout << "Bids:" << std::endl;
-        for (const auto& bid : jsonResponseOrderBook["result"]["bids"]) {
-            std::cout << "Price: " << bid[0] << ", Amount: " << bid[1] << std::endl;
-        }
-
-        std::cout << "Asks:" << std::endl;
-        for (const auto& ask : jsonResponseOrderBook["result"]["asks"]) {
-            std::cout << "Price: " << ask[0] << ", Amount: " << ask[1] << std::endl;
-        }
-        std::cout << std::endl;
-
-        // Get Current Positions
-        std::string currency = "BTC"; 
-        std::string response5 = orderManager.getCurrentPositions(currency);
-        auto jsonResponsePositions = nlohmann::json::parse(response5);
-        std::cout << "Current Positions:" << std::endl;
-        for (const auto& position : jsonResponsePositions["result"]) {
-            std::cout << "Instrument: " << position["instrument_name"] << std::endl;
-            std::cout << "Size: " << position["size"] << std::endl;
-            // std::cout << "Direction: " << position["direction"] << std::endl;
-            std::cout << "Average Price: " << position["average_price"] << std::endl;
-            std::cout << "Floating P&L: " << position["floating_profit_loss"] << std::endl;
-            std::cout << "Realized P&L: " << position["realized_profit_loss"] << std::endl;
-            std::cout << "Leverage: " << position["leverage"] << std::endl;
-            std::cout << std::endl;
-        }
-        // // cancel order
-        // std::string response2 = orderManager.cancelOrder(orderId);
-        // auto jsonResponseCancel = nlohmann::json::parse(response2);
-        // std::cout << "Order cancelled successfully!" << std::endl;
-
-        // // Start WebSocket server for streaming orderbook
-        WebSocketServer wsServer;
-        std::thread serverThread([&wsServer]() {
-            wsServer.startServer(9002);
-        });
-
-        // Start a thread to fetch and stream orderbook updates
-        std::thread orderbookThread(fetchAndStreamOrderbook, std::ref(wsServer));
-
-        // Start WebSocket client in a separate thread to connect to the server
-        std::thread clientThread(startWebSocketClient);
-
-        // Wait for the orderbook thread to finish (it won't in this example)
-        std::cout << "Press Enter to stop..." << std::endl;
-        std::cin.get();
-
-        // Signal the orderbook thread to stop gracefully
-        running = false;
-        orderbookThread.join();  // Wait for the thread to finish
-        clientThread.join(); // Wait for the WebSocket client to finish
-        serverThread.join(); // Wait for the server thread to finish
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-        }
-
-    std::cout << "Press Enter to exit...";
-    std::cin.get();
     return 0;
 }

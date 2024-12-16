@@ -4,6 +4,8 @@
 #include <curl/curl.h>
 #include <iostream>
 
+extern std::string API_KEY,SECRET_KEY,access_token;//global variables
+
 namespace UtilityNamespace {
 
     // Function declarations

@@ -3,20 +3,12 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include "dotenv.h"
 
+std::string API_KEY, SECRET_KEY, access_token;
 namespace UtilityNamespace
 {
-
     std::string authenticate()
     {
-        dotenv::env.load_dotenv("../.env");
-
-        std::string API_KEY = dotenv::env["API_KEY"];
-        std::string SECRET_KEY = dotenv::env["SECRET_KEY"];
-        // Debugging
-        // std::cout << "API_KEY: " << API_KEY << std::endl;
-
         std::string url = "https://test.deribit.com/api/v2/public/auth";
         std::string payload = "{\"jsonrpc\":\"2.0\", \"method\":\"public/auth\", \"params\":{\"grant_type\":\"client_credentials\", \"client_id\":\"" + API_KEY + "\", \"client_secret\":\"" + SECRET_KEY + "\"}, \"id\":1}";
 
@@ -27,7 +19,7 @@ namespace UtilityNamespace
         auto json_response = nlohmann::json::parse(response);
         if (json_response.contains("result") && json_response["result"].contains("access_token"))
         {
-            std::string access_token = json_response["result"]["access_token"];
+            access_token = json_response["result"]["access_token"];
             // std::cout << "Access Token: " << access_token << std::endl;
             return access_token;
         }
@@ -85,10 +77,7 @@ namespace UtilityNamespace
         CURL *curl;
         CURLcode res;
         std::string readBuffer;
-        dotenv::env.load_dotenv();
 
-        std::string API_KEY = std::getenv("API_KEY");
-        std::string SECRET_KEY = std::getenv("SECRET_KEY");
         curl_global_init(CURL_GLOBAL_DEFAULT);
         curl = curl_easy_init();
         if (curl)

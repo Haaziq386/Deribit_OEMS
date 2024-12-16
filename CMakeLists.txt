@@ -14,7 +14,6 @@ find_package(nlohmann_json REQUIRED)
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/include) # Your project's include directory
 include_directories(${Boost_INCLUDE_DIRS})         # Boost headers
-add_subdirectory(cpp-dotenv)
 
 # Source files
 file(GLOB SOURCES "src/*.cpp") # Include all .cpp files in src/
@@ -29,7 +28,6 @@ target_link_libraries(deribit_order_management PRIVATE
     Boost::system 
     Boost::thread 
     nlohmann_json::nlohmann_json
-    cpp_dotenv
 )
 
 # compiler options for better debugging and warnings

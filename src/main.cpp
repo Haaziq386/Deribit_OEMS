@@ -203,7 +203,17 @@ void orderManagementSystem(OrderManager &orderManager)
             auto end = std::chrono::high_resolution_clock::now();
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
+            // Check the API response for success
+            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
+            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            {
+                std::cerr << "Order placement failed. Response: " << jsonResponse.dump(4) << "\n";
+            }
+            else
+            {
+                std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
+                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+            }
             break;
         }
         case CANCEL_ORDER:
@@ -217,7 +227,17 @@ void orderManagementSystem(OrderManager &orderManager)
             auto end = std::chrono::high_resolution_clock::now();
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
+            // Check the API response for success
+            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
+            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            {
+                std::cerr << "Order cancellation failed. Response: " << jsonResponse.dump(4) << "\n";
+            }
+            else
+            {
+                std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
+                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+            }
             break;
         }
         case MODIFY_ORDER:
@@ -236,7 +256,18 @@ void orderManagementSystem(OrderManager &orderManager)
             auto end = std::chrono::high_resolution_clock::now();
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
+
+            // Check the API response for success
+            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
+            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            {
+                std::cerr << "Order modification failed. Response: " << jsonResponse.dump(4) << "\n";
+            }
+            else
+            {
+                std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
+                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+            }
             break;
         }
         case GET_ORDERBOOK:

@@ -55,7 +55,17 @@ std::string OrderManager::getOrderBook(const std::string &symbol)
 {
     std::string url = "https://test.deribit.com/api/v2/public/get_order_book";
     std::string payload = "{\"jsonrpc\":\"2.0\", \"method\":\"public/get_order_book\", \"params\":{\"instrument_name\":\"" + symbol + "\"}, \"id\":4}";
-    return UtilityNamespace::sendPostRequest(url, payload);
+    std::string response = UtilityNamespace::sendPostRequest(url, payload);
+
+    // Parse response and handle errors
+    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
+    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    {
+        std::cerr << "Failed to fetch trade history. Response: " << response << std::endl;
+        return {};
+    }
+
+    return jsonResponse["result"].dump(4);
 }
 
 // function to get current positions
@@ -70,7 +80,18 @@ std::string OrderManager::getCurrentPositions(const std::string &currency)
         {"params", {{"currency", currency}, {"kind", "future"}}}};
 
     std::string authHeader = "Authorization: Bearer " + access_token;
-    return UtilityNamespace::sendPostRequestWithAuth(url, payload.dump(), authHeader);
+
+    std::string response = UtilityNamespace::sendPostRequestWithAuth(url, payload.dump(), authHeader);
+
+    // Parse response and handle errors
+    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
+    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    {
+        std::cerr << "Failed to fetch trade history. Response: " << response << std::endl;
+        return {};
+    }
+
+    return jsonResponse["result"].dump(4);
 }
 std::string OrderManager::getOpenOrders()
 {

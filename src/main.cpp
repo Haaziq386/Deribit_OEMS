@@ -142,8 +142,8 @@ enum Action
     MODIFY_ORDER,
     GET_ORDERBOOK,
     GET_POSITIONS,
-    VIEW_OPEN_ORDERS,   // New Action
-    VIEW_TRADE_HISTORY, // New Action
+    VIEW_OPEN_ORDERS,   
+    VIEW_TRADE_HISTORY, 
     EXIT
 };
 

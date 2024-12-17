@@ -11,6 +11,8 @@
 #include <websocketpp/client.hpp>
 #include <functional>
 #include <unordered_map>
+#include <mutex>
+
 extern std::string API_KEY,SECRET_KEY,access_token;//global variables
 
 namespace UtilityNamespace {
@@ -23,7 +25,4 @@ namespace UtilityNamespace {
     std::string getOrderBook(const std::string& symbol);
     std::string getInstruments();
     std::string getInstrumentOrderbook(const std::string& instrumentName);
-
-    void logMessage(const std::string& message);
-
 }

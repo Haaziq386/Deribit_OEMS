@@ -3,7 +3,10 @@
 
 std::vector<std::string> subscribedSymbols;
 std::atomic<bool> running(true); // allow safe updates from multiple threads without direct memory access management by user
+std::mutex symbolMutex;
 
+websocketpp::client<websocketpp::config::asio> client;
+websocketpp::connection_hdl globalHdl;
 void startWebSocketClient()
 {
     websocketpp::client<websocketpp::config::asio> client;
@@ -15,7 +18,7 @@ void startWebSocketClient()
             try
             {
                 nlohmann::json orderbookData = nlohmann::json::parse(msg->get_payload());
-                // std::cout << "Received orderbook update:\n" << orderbookData.dump(4) << std::endl;
+                std::cout << "Received orderbook update:\n" << orderbookData.dump(4) << std::endl;
             }
             catch (const std::exception &e)
             {
@@ -33,13 +36,42 @@ void startWebSocketClient()
         return;
     }
 
-    // Send subscription request after connecting
-    con->set_open_handler([&client](websocketpp::connection_hdl hdl) {});
-
     client.connect(con);
-    client.run();
-}
+    globalHdl = con->get_handle();
 
+    try
+    {
+        client.run();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "WebSocket client error: " << e.what() << std::endl;
+    }
+}
+void subscribe(const std::string &symbol)
+{
+    nlohmann::json subscribeMessage = {{"action", "subscribe"}, {"symbol", symbol}};
+    client.send(globalHdl, subscribeMessage.dump(), websocketpp::frame::opcode::text);
+    std::lock_guard<std::mutex> lock(symbolMutex);
+    subscribedSymbols.push_back(symbol);
+    std::cout << "Subscribed to: " << symbol << std::endl;
+}
+void unsubscribe(const std::string &symbol)
+{
+    nlohmann::json unsubscribeMessage = {{"action", "unsubscribe"}, {"symbol", symbol}};
+    client.send(globalHdl, unsubscribeMessage.dump(), websocketpp::frame::opcode::text);
+    std::lock_guard<std::mutex> lock(symbolMutex);
+    subscribedSymbols.erase(std::remove(subscribedSymbols.begin(), subscribedSymbols.end(), symbol), subscribedSymbols.end());
+    std::cout << "Unsubscribed from: " << symbol << std::endl;
+}
+void disconnect()
+{
+    client.close(globalHdl, websocketpp::close::status::going_away, "Client disconnecting");
+    std::lock_guard<std::mutex> lock(symbolMutex);
+    subscribedSymbols.clear();
+    running = false;
+    std::cout << "Disconnected from server." << std::endl;
+}
 // Define actions
 enum Action
 {
@@ -68,6 +100,32 @@ Action parseAction(const std::string &input)
         {"connect", CONNECT},
         {"exit", EXIT}};
     return actionMap.count(input) ? actionMap[input] : EXIT;
+}
+
+void manageWebSocket()
+{
+    while (running)
+    {
+        std::cout << "For subscribing , enter SUB,unsubscribing enter UNSUB and for disconnecting from the server enter DISC\n";
+        std::cout << "Then enter the symbol to subscribe or unsubscribe (eg: SUB BTC-PERPETUAL)\n";
+        std::string action, symbol;
+        std::cin >> action;
+        if (action == "SUB")
+        {
+            std::cin >> symbol;
+            subscribe(symbol);
+        }
+        else if (action == "UNSUB")
+        {
+            std::cin >> symbol;
+            unsubscribe(symbol);
+        }
+        else
+        {
+            disconnect();
+            break;
+        }
+    }
 }
 
 void orderManagementSystem(OrderManager &orderManager)
@@ -230,11 +288,20 @@ void orderManagementSystem(OrderManager &orderManager)
         }
         case CONNECT:
         {
-            startWebSocketClient;
-            // std::string symbol;
-            // std::cout << "Enter the symbol to subscribe (e.g., BTC-PERPETUAL): ";
-            // std::cin >> symbol;
-            // handleSubscription(symbol, true); // Subscribe
+            // Implement subscription and unsubscribe and disconnect feature
+            try
+            {
+                std::thread websocketThread(startWebSocketClient);
+                websocketThread.detach();
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Error: " << e.what() << "\n";
+                break;
+            }
+
+            std::thread managerThread(manageWebSocket);
+            managerThread.join();
             break;
         }
         case EXIT:

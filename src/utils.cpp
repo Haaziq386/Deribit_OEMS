@@ -141,9 +141,4 @@ namespace UtilityNamespace
         return sendGetRequest(url); // Sends a GET request to retrieve instruments
     }
 
-    // function for logging
-    void logMessage(const std::string &message)
-    {
-        std::cout << "[LOG]: " << message << std::endl;
-    }
 }

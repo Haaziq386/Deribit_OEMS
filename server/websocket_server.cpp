@@ -37,8 +37,12 @@ void WebSocketServer::sendOrderbookUpdate()
         std::string message = orderbookJson.dump();
         for (const auto &hdl : it.second)
         {
-            m_server.send(hdl, symbol, websocketpp::frame::opcode::text);
-            m_server.send(hdl, message, websocketpp::frame::opcode::text);
+            
+            std::string combinedMessage = nlohmann::json{
+                {"symbol", symbol},
+                {"data", orderbookJson}}.dump();
+
+            m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
         }
     }
 }

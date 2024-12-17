@@ -10,6 +10,7 @@ find_package(CURL REQUIRED)
 find_package(websocketpp REQUIRED CONFIG) # Ensure CONFIG mode is used
 find_package(Boost REQUIRED COMPONENTS system thread) # Ensure Boost::system and Boost::thread are available
 find_package(nlohmann_json REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/include) # Your project's include directory
@@ -28,6 +29,7 @@ target_link_libraries(deribit_order_management PRIVATE
     Boost::system 
     Boost::thread 
     nlohmann_json::nlohmann_json
+    ${OPENSSL_LIBRARIES}
 )
 
 # compiler options for better debugging and warnings

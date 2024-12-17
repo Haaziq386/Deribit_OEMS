@@ -1,90 +1,7 @@
 #include "order_manager.hpp"
 #include "utils.hpp"
+#include "websocket_con.hpp"
 
-std::vector<std::string> subscribedSymbols;
-std::atomic<bool> running(true); // allow safe updates from multiple threads without direct memory access management by user
-std::mutex symbolMutex;
-
-websocketpp::client<websocketpp::config::asio> client;
-websocketpp::connection_hdl globalHdl;
-void startWebSocketClient()
-{
-    websocketpp::client<websocketpp::config::asio> client;
-    client.init_asio();
-
-    client.set_message_handler(
-        [](websocketpp::connection_hdl, websocketpp::config::asio::message_type::ptr msg)
-        {
-            try
-            {
-                auto receivedTime = std::chrono::system_clock::now();
-                nlohmann::json orderbookData = nlohmann::json::parse(msg->get_payload());
-
-                if (orderbookData.contains("timestamp"))
-                {
-                    auto sentTimestamp = orderbookData["timestamp"].get<long long>();
-                    auto receivedTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                                 receivedTime.time_since_epoch())
-                                                 .count();
-                    auto propagationDelay = receivedTimestamp - sentTimestamp;
-                    std::cout << "Propagation delay: " << propagationDelay << " ms" << std::endl;
-                }
-
-                std::cout << "Received orderbook update:\n"
-                          << orderbookData.dump(4) << std::endl;
-            }
-            catch (const std::exception &e)
-            {
-                std::cerr << "JSON parsing error: " << e.what() << std::endl;
-            }
-        });
-
-    websocketpp::lib::error_code ec;
-    std::string uri = "ws://localhost:9002";
-    websocketpp::client<websocketpp::config::asio>::connection_ptr con = client.get_connection(uri, ec);
-
-    if (ec)
-    {
-        std::cerr << "Connection error: " << ec.message() << std::endl;
-        return;
-    }
-
-    client.connect(con);
-    globalHdl = con->get_handle();
-
-    try
-    {
-        client.run();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "WebSocket client error: " << e.what() << std::endl;
-    }
-}
-void subscribe(const std::string &symbol)
-{
-    nlohmann::json subscribeMessage = {{"action", "subscribe"}, {"symbol", symbol}};
-    client.send(globalHdl, subscribeMessage.dump(), websocketpp::frame::opcode::text);
-    std::lock_guard<std::mutex> lock(symbolMutex);
-    subscribedSymbols.push_back(symbol);
-    std::cout << "Subscribed to: " << symbol << std::endl;
-}
-void unsubscribe(const std::string &symbol)
-{
-    nlohmann::json unsubscribeMessage = {{"action", "unsubscribe"}, {"symbol", symbol}};
-    client.send(globalHdl, unsubscribeMessage.dump(), websocketpp::frame::opcode::text);
-    std::lock_guard<std::mutex> lock(symbolMutex);
-    subscribedSymbols.erase(std::remove(subscribedSymbols.begin(), subscribedSymbols.end(), symbol), subscribedSymbols.end());
-    std::cout << "Unsubscribed from: " << symbol << std::endl;
-}
-void disconnect()
-{
-    client.close(globalHdl, websocketpp::close::status::going_away, "Client disconnecting");
-    std::lock_guard<std::mutex> lock(symbolMutex);
-    subscribedSymbols.clear();
-    running = false;
-    std::cout << "Disconnected from server." << std::endl;
-}
 // Define actions
 enum Action
 {
@@ -113,32 +30,6 @@ Action parseAction(const std::string &input)
         {"connect", CONNECT},
         {"exit", EXIT}};
     return actionMap.count(input) ? actionMap[input] : EXIT;
-}
-
-void manageWebSocket()
-{
-    while (running)
-    {
-        std::cout << "For subscribing , enter SUB,unsubscribing enter UNSUB and for disconnecting from the server enter DISC\n";
-        std::cout << "Then enter the symbol to subscribe or unsubscribe (eg: SUB BTC-PERPETUAL)\n";
-        std::string action, symbol;
-        std::cin >> action;
-        if (action == "SUB")
-        {
-            std::cin >> symbol;
-            subscribe(symbol);
-        }
-        else if (action == "UNSUB")
-        {
-            std::cin >> symbol;
-            unsubscribe(symbol);
-        }
-        else
-        {
-            disconnect();
-            break;
-        }
-    }
 }
 
 void orderManagementSystem(OrderManager &orderManager)
@@ -302,9 +193,10 @@ void orderManagementSystem(OrderManager &orderManager)
         case CONNECT:
         {
             // Implement subscription and unsubscribe and disconnect feature
+            WebSocketClient wsClient;
             try
             {
-                std::thread websocketThread(startWebSocketClient);
+                std::thread websocketThread(&WebSocketClient::start, &wsClient);
                 websocketThread.detach();
             }
             catch (const std::exception &e)
@@ -313,10 +205,10 @@ void orderManagementSystem(OrderManager &orderManager)
                 break;
             }
 
-            std::thread managerThread(manageWebSocket);
+            std::thread managerThread(&WebSocketClient::manageWebSocket, &wsClient);
             managerThread.join();
             break;
-        }
+        }//UNSUB ETH-PERPETUAL
         case EXIT:
         {
             std::cout << "Exiting order management system...\n";

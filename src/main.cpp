@@ -147,7 +147,11 @@ void orderManagementSystem(OrderManager &orderManager)
             std::cout << "Enter instrument for orderbook (e.g., BTC-PERPETUAL): ";
             std::cin >> symbol;
 
+            auto start = std::chrono::high_resolution_clock::now();
             std::string response = orderManager.getOrderBook(symbol);
+            auto end= std::chrono::high_resolution_clock::now();
+            auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            std::cout<<"Market Data processing Latency: "<<latency<<" ms\n";
             std::cout << "Orderbook: " << response << "\n";
             break;
         }

@@ -17,8 +17,21 @@ void startWebSocketClient()
         {
             try
             {
+                auto receivedTime = std::chrono::system_clock::now();
                 nlohmann::json orderbookData = nlohmann::json::parse(msg->get_payload());
-                std::cout << "Received orderbook update:\n" << orderbookData.dump(4) << std::endl;
+
+                if (orderbookData.contains("timestamp"))
+                {
+                    auto sentTimestamp = orderbookData["timestamp"].get<long long>();
+                    auto receivedTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                 receivedTime.time_since_epoch())
+                                                 .count();
+                    auto propagationDelay = receivedTimestamp - sentTimestamp;
+                    std::cout << "Propagation delay: " << propagationDelay << " ms" << std::endl;
+                }
+
+                std::cout << "Received orderbook update:\n"
+                          << orderbookData.dump(4) << std::endl;
             }
             catch (const std::exception &e)
             {

@@ -37,10 +37,13 @@ void WebSocketServer::sendOrderbookUpdate()
         std::string message = orderbookJson.dump();
         for (const auto &hdl : it.second)
         {
-            
+            auto currentTime = std::chrono::system_clock::now();
+            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime.time_since_epoch()).count();
+
             std::string combinedMessage = nlohmann::json{
                 {"symbol", symbol},
-                {"data", orderbookJson}}.dump();
+                {"data", orderbookJson},
+                {"timestamp", timestamp}}.dump();
 
             m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
         }

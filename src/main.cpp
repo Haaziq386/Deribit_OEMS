@@ -1,96 +1,9 @@
 #include "order_manager.hpp"
 #include "utils.hpp"
-#include <iostream>
-#include <nlohmann/json.hpp>
-#include <thread>
-#include "websocket_server.hpp"
-#include <chrono>
-#include <atomic>
-#include <websocketpp/config/asio_no_tls.hpp>
-#include <websocketpp/client.hpp>
-#include <functional>
-#include <unordered_map>
 
 std::vector<std::string> subscribedSymbols;
 std::atomic<bool> running(true); // allow safe updates from multiple threads without direct memory access management by user
-void fetchAndStreamOrderbook(WebSocketServer &wsServer)
-{
-    while (running)
-    {
-        try
-        {
-            auto sentTime = std::chrono::high_resolution_clock::now();
-            wsServer.sendOrderbookUpdate("none", nlohmann::json::parse(UtilityNamespace::getInstruments()));
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            auto propagationDelay = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - sentTime).count();
-            std::cout << "WebSocket Message Propagation Delay: " << propagationDelay << " ms" << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "Error fetching orderbook: " << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(5));
-        }
-    }
-}
 
-void on_message(websocketpp::client<websocketpp::config::asio> *, websocketpp::connection_hdl, websocketpp::client<websocketpp::config::asio>::message_ptr msg)
-{
-    try
-    {
-        // Parse the incoming message (JSON)
-        nlohmann::json orderbookData = nlohmann::json::parse(msg->get_payload());
-        // std::cout << "Received orderbook update:\n" << orderbookData.dump(4) << std::endl;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "JSON parsing error: " << e.what() << std::endl;
-    }
-}
-std::vector<std::string> fetchAllSymbols()
-{
-    std::string response = UtilityNamespace::getInstruments(); // Implement this function to call the Deribit API
-    auto jsonResponse = nlohmann::json::parse(response);
-    std::vector<std::string> symbols;
-    std::vector<std::string> future;
-    std::vector<std::string> option;
-    // bool flag = false;
-    for (const auto &instrument : jsonResponse["result"])
-    {
-        // if(instrument["instrument_name"]=="BTC-PERPETUAL")flag=true;
-        // if(!flag)continue;
-        if (instrument["kind"] == "future")
-        {
-            future.push_back(instrument["instrument_name"]);
-            symbols.push_back(instrument["instrument_name"]);
-        }
-        else if (instrument["kind"] == "option")
-        {
-            option.push_back(instrument["instrument_name"]);
-            symbols.push_back(instrument["instrument_name"]);
-        }
-        else
-            symbols.push_back(instrument["instrument_name"]);
-        // std::cout<<symbols.back()<<std::endl;
-    }
-    return symbols;
-}
-void subscribeToSymbols(websocketpp::client<websocketpp::config::asio> &, websocketpp::connection_hdl)
-{
-    nlohmann::json subscribeMessage;
-    subscribeMessage["jsonrpc"] = "2.0";
-    subscribeMessage["id"] = 1;
-    subscribeMessage["method"] = "public/subscribe";
-
-    nlohmann::json params;
-    for (const auto &symbol : subscribedSymbols)
-    {
-        params["channels"].push_back("orderbook." + symbol);
-    }
-    subscribeMessage["params"] = params;
-
-    // client.send(hdl, subscribeMessage.dump(), websocketpp::frame::opcode::text);
-}
 void startWebSocketClient()
 {
     websocketpp::client<websocketpp::config::asio> client;
@@ -121,14 +34,7 @@ void startWebSocketClient()
     }
 
     // Send subscription request after connecting
-    con->set_open_handler([&client](websocketpp::connection_hdl hdl)
-                          {
-                              auto start1 = std::chrono::high_resolution_clock::now();
-                              subscribedSymbols = fetchAllSymbols(); // Fetch all symbols
-                              subscribeToSymbols(client, hdl);       // Subscribe to all symbols
-                              auto end1 = std::chrono::high_resolution_clock::now();
-                              auto marketProcessTime = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
-                              std::cout << "Market Data Processing Latency: " << marketProcessTime << " ms" << std::endl; });
+    con->set_open_handler([&client](websocketpp::connection_hdl hdl) {});
 
     client.connect(con);
     client.run();
@@ -142,8 +48,9 @@ enum Action
     MODIFY_ORDER,
     GET_ORDERBOOK,
     GET_POSITIONS,
-    VIEW_OPEN_ORDERS,   
-    VIEW_TRADE_HISTORY, 
+    VIEW_OPEN_ORDERS,
+    VIEW_TRADE_HISTORY,
+    CONNECT,
     EXIT
 };
 
@@ -156,8 +63,9 @@ Action parseAction(const std::string &input)
         {"modify", MODIFY_ORDER},
         {"orderbook", GET_ORDERBOOK},
         {"positions", GET_POSITIONS},
-        {"open_orders", VIEW_OPEN_ORDERS},     // Map "open_orders" to VIEW_OPEN_ORDERS
-        {"trade_history", VIEW_TRADE_HISTORY}, // Map "trade_history" to VIEW_TRADE_HISTORY
+        {"open_orders", VIEW_OPEN_ORDERS},
+        {"trade_history", VIEW_TRADE_HISTORY},
+        {"connect", CONNECT},
         {"exit", EXIT}};
     return actionMap.count(input) ? actionMap[input] : EXIT;
 }
@@ -174,7 +82,8 @@ void orderManagementSystem(OrderManager &orderManager)
         std::cout << "5. View positions (type 'positions')\n";
         std::cout << "6. View open orders (type 'open_orders')\n";
         std::cout << "7. View trade history (type 'trade_history')\n";
-        std::cout << "8. Exit (type 'exit')\n";
+        std::cout << "8. Connect to websocket server (type 'connect')\n";
+        std::cout << "9. Exit (type 'exit')\n";
         std::cout << "Enter choice: ";
 
         std::string userInput;
@@ -319,7 +228,15 @@ void orderManagementSystem(OrderManager &orderManager)
             std::cout << "Latency: " << latency << " ms\n";
             break;
         }
-
+        case CONNECT:
+        {
+            startWebSocketClient;
+            // std::string symbol;
+            // std::cout << "Enter the symbol to subscribe (e.g., BTC-PERPETUAL): ";
+            // std::cin >> symbol;
+            // handleSubscription(symbol, true); // Subscribe
+            break;
+        }
         case EXIT:
         {
             std::cout << "Exiting order management system...\n";

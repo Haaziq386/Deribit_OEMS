@@ -1,8 +1,4 @@
 #include "utils.hpp"
-// #include "config.hpp"
-#include <curl/curl.h>
-#include <iostream>
-#include <nlohmann/json.hpp>
 
 std::string API_KEY, SECRET_KEY, access_token;
 namespace UtilityNamespace
@@ -143,11 +139,6 @@ namespace UtilityNamespace
     {
         std::string url = "https://test.deribit.com/api/v2/public/get_instruments";
         return sendGetRequest(url); // Sends a GET request to retrieve instruments
-    }
-    std::string getInstrumentOrderbook(const std::string &instrumentName)
-    {
-        std::string url = "https://test.deribit.com/api/v2/public/get_order_book?instrument_name=" + instrumentName;
-        return sendGetRequest(url); // Sends a GET request to retrieve the order book for the specified instrument
     }
 
     // function for logging

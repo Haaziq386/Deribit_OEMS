@@ -3,7 +3,14 @@
 #include <string>
 #include <curl/curl.h>
 #include <iostream>
-
+#include <nlohmann/json.hpp>
+#include <thread>
+#include <chrono>
+#include <atomic>
+#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/client.hpp>
+#include <functional>
+#include <unordered_map>
 extern std::string API_KEY,SECRET_KEY,access_token;//global variables
 
 namespace UtilityNamespace {

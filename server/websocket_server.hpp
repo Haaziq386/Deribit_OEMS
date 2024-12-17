@@ -17,7 +17,7 @@ public:
     WebSocketServer();
     void startServer(uint16_t port);
     void stopServer();
-    void sendOrderbookUpdate(const std::string &symbol, const nlohmann::json &orderbook);
+    void sendOrderbookUpdate();
 
 private:
     void onOpen(websocketpp::connection_hdl hdl);
@@ -28,5 +28,5 @@ private:
     std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_connections;
     std::unordered_map<std::string, std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>>> m_subscribers;
     std::thread m_serverThread;
-    std::mutex m_mutex; // Mutex for thread safety
+    std::mutex m_mutex;
 };

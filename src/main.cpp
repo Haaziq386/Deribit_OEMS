@@ -260,7 +260,7 @@ void orderManagementSystem(OrderManager &orderManager)
             auto end = std::chrono::high_resolution_clock::now();
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             std::cout << "Market Data processing Latency: " << latency << " ms\n";
-            std::cout << "Orderbook: " << response << "\n";
+            std::cout << "Orderbook: " << UtilityNamespace::beautifyJSON(response) << "\n";
             break;
         }
         case GET_POSITIONS:
@@ -270,7 +270,7 @@ void orderManagementSystem(OrderManager &orderManager)
             std::cin >> currency;
 
             std::string response = orderManager.getCurrentPositions(currency);
-            std::cout << "Positions: " << response << "\n";
+            std::cout << "Positions: " << UtilityNamespace::beautifyJSON(response) << "\n";
             break;
         }
         case VIEW_OPEN_ORDERS:
@@ -282,7 +282,7 @@ void orderManagementSystem(OrderManager &orderManager)
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             std::cout << "Open Orders:\n"
-                      << response << "\n";
+                      << UtilityNamespace::beautifyJSON(response) << "\n";
             std::cout << "Latency: " << latency << " ms\n";
             break;
         }
@@ -298,7 +298,7 @@ void orderManagementSystem(OrderManager &orderManager)
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             std::cout << "Trade History:\n"
-                      << response << "\n";
+                      << UtilityNamespace::beautifyJSON(response) << "\n";
             std::cout << "Latency: " << latency << " ms\n";
             break;
         }

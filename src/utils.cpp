@@ -77,7 +77,89 @@ namespace UtilityNamespace
         curl_global_cleanup();
         return readBuffer;
     }
+    std::string beautifyJSON(const std::string &jsonString) //lightweight JSON beautifier unlike nlohmann
+    {
+        std::string beautified;
+        int indentLevel = 0;
+        bool inQuotes = false;
 
+        for (size_t i = 0; i < jsonString.length(); ++i)
+        {
+            char currentChar = jsonString[i];
+
+            switch (currentChar)
+            {
+            case '{':
+            case '[':
+                if (!inQuotes)
+                {
+                    beautified += currentChar;
+                    beautified += "\n";
+                    ++indentLevel;
+                    beautified.append(indentLevel * 4, ' ');
+                }
+                else
+                {
+                    beautified += currentChar;
+                }
+                break;
+
+            case '}':
+            case ']':
+                if (!inQuotes)
+                {
+                    beautified += "\n";
+                    --indentLevel;
+                    beautified.append(indentLevel * 4, ' ');
+                    beautified += currentChar;
+                }
+                else
+                {
+                    beautified += currentChar;
+                }
+                break;
+
+            case ',':
+                if (!inQuotes)
+                {
+                    beautified += currentChar;
+                    beautified += "\n";
+                    beautified.append(indentLevel * 4, ' ');
+                }
+                else
+                {
+                    beautified += currentChar;
+                }
+                break;
+
+            case ':':
+                if (!inQuotes)
+                {
+                    beautified += currentChar;
+                    beautified += " ";
+                }
+                else
+                {
+                    beautified += currentChar;
+                }
+                break;
+
+            case '"':
+                beautified += currentChar;
+                if (i > 0 && jsonString[i - 1] != '\\')
+                {
+                    inQuotes = !inQuotes;
+                }
+                break;
+
+            default:
+                beautified += currentChar;
+                break;
+            }
+        }
+
+        return beautified;
+    }
     // function to perform HTTP POST requests
     std::string sendPostRequest(const std::string &url, const std::string &payload)
     {

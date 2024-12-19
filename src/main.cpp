@@ -168,7 +168,7 @@ void orderManagementSystem(OrderManager &orderManager)
                 else
                 {
                     std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
-                    std::cout << "Response: " << response << "\n";
+                    std::cout << "Response: " << UtilityNamespace::beautifyJSON(response) << "\n";
                 }
             }
             catch (const simdjson::simdjson_error &e)
@@ -201,7 +201,7 @@ void orderManagementSystem(OrderManager &orderManager)
                 else
                 {
                     std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
-                    std::cout << "Response: " << response << "\n";
+                    std::cout << "Response: " << UtilityNamespace::beautifyJSON(response) << "\n";
                 }
             }
             catch (const simdjson::simdjson_error &e)
@@ -240,7 +240,7 @@ void orderManagementSystem(OrderManager &orderManager)
                 else
                 {
                     std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
-                    std::cout << "Response: " << response << "\n";
+                    std::cout << "Response: " << UtilityNamespace::beautifyJSON(response) << "\n";
                 }
             }
             catch (const simdjson::simdjson_error &e)

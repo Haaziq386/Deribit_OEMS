@@ -29,4 +29,5 @@ namespace UtilityNamespace
     std::string getOrderBook(const std::string &symbol);
     std::string getInstruments();
     std::string getInstrumentOrderbook(const std::string &instrumentName);
+    std::string beautifyJSON(const std::string &jsonString);
 }

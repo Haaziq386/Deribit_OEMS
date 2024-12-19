@@ -17,7 +17,7 @@ void WebSocketClient::start()
 {
     websocketpp::lib::error_code ec;
     std::string uri = "ws://localhost:9002";
-    websocketpp::client<websocketpp::config::asio>::connection_ptr con = client.get_connection(uri, ec);
+    auto con = client.get_connection(uri, ec);
 
     if (ec)
     {

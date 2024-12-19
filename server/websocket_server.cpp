@@ -1,9 +1,9 @@
 #include "websocket_server.hpp"
 #include "utils.hpp"
-
+#include "threadpool.hpp"
 // Implementation of the WebSocketServer methods
 
-WebSocketServer::WebSocketServer()
+WebSocketServer::WebSocketServer() : threadPool(4)
 {
     m_server.init_asio();
     m_server.set_open_handler(bind(&WebSocketServer::onOpen, this, std::placeholders::_1));
@@ -16,9 +16,8 @@ void WebSocketServer::startServer(uint16_t port)
     std::cout << "started" << std::endl;
     m_server.listen(port);
     m_server.start_accept();
-    std::thread server_thread([this]()
-                              { m_server.run(); }); // Detach the thread to allow it to run independently
-    server_thread.detach();
+    threadPool.enqueue([this]()
+                       { m_server.run(); }); // Run the server in a thread pool
 }
 
 void WebSocketServer::stopServer()
@@ -32,20 +31,22 @@ void WebSocketServer::sendOrderbookUpdate()
     for (const auto &it : m_subscribers)
     {
         const std::string &symbol = it.first;
-        std::string orderbook = UtilityNamespace::getInstrumentOrderbook(symbol);
-        const nlohmann::json orderbookJson = nlohmann::json::parse(orderbook);
-        for (const auto &hdl : it.second)
-        {
-            auto currentTime = std::chrono::system_clock::now();
-            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime.time_since_epoch()).count();
+        threadPool.enqueue([this, symbol]()
+                           {
+                                   std::string orderbook = UtilityNamespace::getInstrumentOrderbook(symbol);
+                                   const nlohmann::json orderbookJson = nlohmann::json::parse(orderbook);
+                                   for (const auto &hdl : m_subscribers[symbol])
+                                   {
+                                       auto currentTime = std::chrono::system_clock::now();
+                                       auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime.time_since_epoch()).count();
 
-            std::string combinedMessage = nlohmann::json{
-                {"symbol", symbol},
-                {"data", orderbookJson},
-                {"timestamp", timestamp}}.dump();
+                                       std::string combinedMessage = nlohmann::json{
+                                           {"symbol", symbol},
+                                           {"data", orderbookJson},
+                                           {"timestamp", timestamp}}.dump();
 
-            m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
-        }
+                                       m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
+                                   } });
     }
 }
 

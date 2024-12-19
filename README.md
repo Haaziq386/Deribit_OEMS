@@ -32,7 +32,6 @@
 ### Libraries Used
 
 #### Core Libraries
-- **ncurses:** For terminal-based UI.
 - **simdjson:** For efficient JSON parsing.
 - **libcurl:** For REST API interactions.
 

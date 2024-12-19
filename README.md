@@ -65,7 +65,7 @@
 4. For the server:
    ```bash
    cd server/
-   g++ websocket_server.cpp utils.cpp -lcurl
+   g++ websocket_server.cpp utils.cpp threadpool.cpp -lcurl
    ./a.out
    ```
 

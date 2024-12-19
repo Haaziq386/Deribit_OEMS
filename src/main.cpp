@@ -149,9 +149,9 @@ void orderManagementSystem(OrderManager &orderManager)
 
             auto start = std::chrono::high_resolution_clock::now();
             std::string response = orderManager.getOrderBook(symbol);
-            auto end= std::chrono::high_resolution_clock::now();
+            auto end = std::chrono::high_resolution_clock::now();
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            std::cout<<"Market Data processing Latency: "<<latency<<" ms\n";
+            std::cout << "Market Data processing Latency: " << latency << " ms\n";
             std::cout << "Orderbook: " << response << "\n";
             break;
         }
@@ -212,7 +212,7 @@ void orderManagementSystem(OrderManager &orderManager)
             std::thread managerThread(&WebSocketClient::manageWebSocket, &wsClient);
             managerThread.join();
             break;
-        }//UNSUB ETH-PERPETUAL
+        }
         case EXIT:
         {
             std::cout << "Exiting order management system...\n";
@@ -228,11 +228,13 @@ void orderManagementSystem(OrderManager &orderManager)
 int main()
 {
     // examples
-    //"USDC_USDT", "buy", 10.0, 350.0,"market"
-    //"BTC-PERPETUAL", "buy", 10.0, 350.0,"limit"
+    //"USDC_USDT", "buy", 10.0, 350.0,"market"  ->spot
+    //"BTC-PERPETUAL", "buy", 10.0, 350.0,"limit" ->future
+    //"BTC-20DEC24","buy", 10.0, 250.0,"limit" ->future with expiry
+    // ETH-26SEP25-1900-C","buy", 1, 0.7,"limit" ->option
     // spot= STETH_USDC
     // future= BTC-PERPETUAL
-    // option= ETH-26SEP25-19000-C
+    // option= ETH-26SEP25-1900-C
     try
     {
         OrderManager orderManager;

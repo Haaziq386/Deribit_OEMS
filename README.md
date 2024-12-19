@@ -90,7 +90,7 @@ The app follows a modular code structure for maintainability and scalability:
 ### Design Choices
 
 - **Modular Components:** Separate files for order management, WebSocket client, and utility functions.
-- **Real-time Data:** Integrated ncurses for a responsive terminal interface.
+- **Real-time Data:** Simple and responsive UI.
 - **Error Handling:** Robust exception handling for JSON parsing and network communication.
 
 ---

@@ -45,7 +45,9 @@ void WebSocketServer::sendOrderbookUpdate()
                                            {"data", orderbookJson},
                                            {"timestamp", timestamp}}.dump();
 
-                                       m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
+                                       m_server.get_io_service().post([this, hdl, combinedMessage]() {
+                    m_server.send(hdl, combinedMessage, websocketpp::frame::opcode::text);
+                });
                                    } });
     }
 }
@@ -76,6 +78,7 @@ void WebSocketServer::onMessage(websocketpp::connection_hdl hdl, server::message
 
     if (json.contains("action"))
     {
+        std::unique_lock<std::shared_mutex> lock(m_subscribersMutex);
         if (json["action"] == "subscribe" && json.contains("symbol"))
         {
             std::string symbol = json["symbol"];
@@ -100,11 +103,16 @@ int main()
     try
     {
         wsServer.startServer(9002);
-        while (1)
-        {
-            wsServer.sendOrderbookUpdate();
-            sleep(10);
-        }
+
+        std::thread updateThread([&wsServer]()
+                                 {
+            while (true) {
+                wsServer.sendOrderbookUpdate();
+                std::this_thread::sleep_for(std::chrono::seconds(10));
+            } });
+
+        // Main thread handles server shutdown gracefully
+        updateThread.join();
     }
     catch (const std::exception &e)
     {

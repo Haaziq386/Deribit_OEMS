@@ -7,7 +7,7 @@
 #include <thread>
 #include <nlohmann/json.hpp>
 #include <unordered_map>
-#include <mutex>
+#include <shared_mutex>
 #include "threadpool.hpp"
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -28,6 +28,7 @@ private:
     std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_connections;
     std::unordered_map<std::string, std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>>> m_subscribers;
     std::thread m_serverThread;
-    std::mutex m_mutex;
     ThreadPool threadPool;
+    std::shared_mutex m_subscribersMutex;
+
 };

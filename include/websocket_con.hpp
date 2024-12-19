@@ -11,6 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 class WebSocketClient {
 public:
@@ -28,7 +29,7 @@ private:
 
     websocketpp::client<websocketpp::config::asio> client;
     websocketpp::connection_hdl globalHdl;
-    std::vector<std::string> subscribedSymbols;
+    std::unordered_set<std::string> subscribedSymbols;
     std::atomic<bool> running;
     std::mutex symbolMutex;
 };

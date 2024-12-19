@@ -44,7 +44,7 @@ void WebSocketClient::subscribe(const std::string &symbol)
     nlohmann::json subscribeMessage = {{"action", "subscribe"}, {"symbol", symbol}};
     client.send(globalHdl, subscribeMessage.dump(), websocketpp::frame::opcode::text);
     std::lock_guard<std::mutex> lock(symbolMutex);
-    subscribedSymbols.push_back(symbol);
+    subscribedSymbols.insert(symbol);
     std::cout << "Subscribed to: " << symbol << std::endl;
 }
 
@@ -53,7 +53,7 @@ void WebSocketClient::unsubscribe(const std::string &symbol)
     nlohmann::json unsubscribeMessage = {{"action", "unsubscribe"}, {"symbol", symbol}};
     client.send(globalHdl, unsubscribeMessage.dump(), websocketpp::frame::opcode::text);
     std::lock_guard<std::mutex> lock(symbolMutex);
-    subscribedSymbols.erase(std::remove(subscribedSymbols.begin(), subscribedSymbols.end(), symbol), subscribedSymbols.end());
+    subscribedSymbols.erase(symbol);
     std::cout << "Unsubscribed from: " << symbol << std::endl;
 }
 

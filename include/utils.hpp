@@ -12,17 +12,21 @@
 #include <functional>
 #include <unordered_map>
 #include <mutex>
+#include "sys/times.h"
+#include <simdjson.h>
+#include <simdjson/ondemand.h>
 
-extern std::string API_KEY,SECRET_KEY,access_token;//global variables
+extern std::string API_KEY, SECRET_KEY, access_token; // global variables
 
-namespace UtilityNamespace {
+namespace UtilityNamespace
+{
 
     // Function declarations
-    std::string sendPostRequest(const std::string& url, const std::string& postFields);
-    std::string sendPostRequestWithAuth(const std::string& url, const std::string& postFields, const std::string& token);
-    std::string sendGetRequest(const std::string& url);
+    std::string sendPostRequest(const std::string &url, const std::string &postFields);
+    std::string sendPostRequestWithAuth(const std::string &url, const std::string &postFields, const std::string &token);
+    std::string sendGetRequest(const std::string &url);
     std::string authenticate();
-    std::string getOrderBook(const std::string& symbol);
+    std::string getOrderBook(const std::string &symbol);
     std::string getInstruments();
-    std::string getInstrumentOrderbook(const std::string& instrumentName);
+    std::string getInstrumentOrderbook(const std::string &instrumentName);
 }

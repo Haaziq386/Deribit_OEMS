@@ -12,17 +12,28 @@ namespace UtilityNamespace
         std::string response = sendPostRequest(url, payload);
 
         // parsing the response to get the access token
-        auto json_response = nlohmann::json::parse(response);
-        if (json_response.contains("result") && json_response["result"].contains("access_token"))
+        simdjson::ondemand::parser parser;
+        simdjson::ondemand::document jsonResponse = parser.iterate(response);
+
+        try
         {
-            access_token = json_response["result"]["access_token"];
-            // std::cout << "Access Token: " << access_token << std::endl;
-            return access_token;
+            if (jsonResponse["result"].error() == simdjson::SUCCESS && jsonResponse["result"]["access_token"].error() == simdjson::SUCCESS)
+            {
+                auto sv = jsonResponse["result"]["access_token"].get_string().value();
+                access_token = std::string(sv.data(), sv.length());
+                // std::cout << "Access Token: " << access_token << std::endl;
+                return access_token;
+            }
+            else
+            {
+                std::cerr << "Authentication failed. Response: " << response << std::endl;
+                throw std::runtime_error("Authentication failed.");
+            }
         }
-        else
+        catch (const simdjson::simdjson_error &e)
         {
-            std::cerr << "Authentication failed. Response: " << response << std::endl;
-            throw std::runtime_error("Authentication failed.");
+            std::cerr << "Error parsing JSON response: " << e.what() << std::endl;
+            throw std::runtime_error("Error parsing JSON response.");
         }
     }
 

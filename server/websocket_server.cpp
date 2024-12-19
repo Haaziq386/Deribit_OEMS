@@ -34,7 +34,6 @@ void WebSocketServer::sendOrderbookUpdate()
         const std::string &symbol = it.first;
         std::string orderbook = UtilityNamespace::getInstrumentOrderbook(symbol);
         const nlohmann::json orderbookJson = nlohmann::json::parse(orderbook);
-        std::string message = orderbookJson.dump();
         for (const auto &hdl : it.second)
         {
             auto currentTime = std::chrono::system_clock::now();

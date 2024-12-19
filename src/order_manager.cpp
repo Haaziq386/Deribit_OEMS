@@ -57,14 +57,13 @@ std::string OrderManager::getOrderBook(const std::string &symbol)
     std::string response = UtilityNamespace::sendPostRequest(url, payload);
 
     // Parse response and handle errors
-    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    simdjson::ondemand::parser parser;
+    simdjson::ondemand::document jsonResponse = parser.iterate(response);
+    if (jsonResponse["result"].error() != simdjson::SUCCESS)
     {
-        std::cerr << "Failed to fetch trade history. Response: " << response << std::endl;
-        return {};
+        std::cerr << "Failed to fetch order book. Response: " << response << "\n";
     }
-
-    return jsonResponse["result"].dump(4);
+    return response;
 }
 
 // function to get current positions
@@ -83,14 +82,13 @@ std::string OrderManager::getCurrentPositions(const std::string &currency)
     std::string response = UtilityNamespace::sendPostRequestWithAuth(url, payload.dump(), authHeader);
 
     // Parse response and handle errors
-    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    simdjson::ondemand::parser parser;
+    simdjson::ondemand::document jsonResponse = parser.iterate(response);
+    if (jsonResponse["result"].error() != simdjson::SUCCESS)
     {
-        std::cerr << "Failed to fetch trade history. Response: " << response << std::endl;
-        return {};
+        std::cerr << "Failed to fetch positions. Response: " << response << "\n";
     }
-
-    return jsonResponse["result"].dump(4);
+    return response;
 }
 std::string OrderManager::getOpenOrders()
 {
@@ -107,14 +105,13 @@ std::string OrderManager::getOpenOrders()
     std::string response = UtilityNamespace::sendPostRequestWithAuth(url, payload.dump(), authHeader);
 
     // Parse response and handle errors
-    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    simdjson::ondemand::parser parser;
+    simdjson::ondemand::document jsonResponse = parser.iterate(response);
+    if (jsonResponse["result"].error() != simdjson::SUCCESS)
     {
-        std::cerr << "Failed to fetch open orders. Response: " << response << std::endl;
-        return {};
+        std::cerr << "Failed to fetch open orders. Response: " << response << "\n";
     }
-
-    return jsonResponse["result"].dump(4);
+    return response;
 }
 std::string OrderManager::getTradeHistory(const std::string &currency)
 {
@@ -131,12 +128,11 @@ std::string OrderManager::getTradeHistory(const std::string &currency)
     std::string response = UtilityNamespace::sendPostRequestWithAuth(url, payload.dump(), authHeader);
 
     // Parse response and handle errors
-    auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-    if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+    simdjson::ondemand::parser parser;
+    simdjson::ondemand::document jsonResponse = parser.iterate(response);
+    if (jsonResponse["result"].error() != simdjson::SUCCESS)
     {
-        std::cerr << "Failed to fetch trade history. Response: " << response << std::endl;
-        return {};
+        std::cerr << "Failed to fetch trade history. Response: " << response << "\n";
     }
-
-    return jsonResponse["result"].dump(4);
+    return response;
 }

@@ -1,7 +1,6 @@
 #include "order_manager.hpp"
 #include "utils.hpp"
 #include "websocket_con.hpp"
-#include "sys/times.h"
 
 int parseLine(char *line)
 {
@@ -157,15 +156,24 @@ void orderManagementSystem(OrderManager &orderManager)
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             // Check the API response for success
-            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            simdjson::ondemand::parser parser;
+            simdjson::ondemand::document jsonResponse = parser.iterate(response);
+
+            try
             {
-                std::cerr << "Order placement failed. Response: " << jsonResponse.dump(4) << "\n";
+                if (jsonResponse["result"].error() != simdjson::SUCCESS)
+                {
+                    std::cerr << "Order placement failed. Response: " << response << "\n";
+                }
+                else
+                {
+                    std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
+                    std::cout << "Response: " << response << "\n";
+                }
             }
-            else
+            catch (const simdjson::simdjson_error &e)
             {
-                std::cout << "Order placed successfully. Latency: " << latency << " ms\n";
-                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+                std::cerr << "Order placement failed. Response: " << response << "\n";
             }
             break;
         }
@@ -181,15 +189,24 @@ void orderManagementSystem(OrderManager &orderManager)
 
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             // Check the API response for success
-            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            simdjson::ondemand::parser parser;
+            simdjson::ondemand::document jsonResponse = parser.iterate(response);
+
+            try
             {
-                std::cerr << "Order cancellation failed. Response: " << jsonResponse.dump(4) << "\n";
+                if (jsonResponse["result"].error() != simdjson::SUCCESS)
+                {
+                    std::cerr << "Order cancellation failed. Response: " << response << "\n";
+                }
+                else
+                {
+                    std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
+                    std::cout << "Response: " << response << "\n";
+                }
             }
-            else
+            catch (const simdjson::simdjson_error &e)
             {
-                std::cout << "Order canceled successfully. Latency: " << latency << " ms\n";
-                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+                std::cerr << "Order cancellation failed. Response: " << response << "\n";
             }
             break;
         }
@@ -211,15 +228,24 @@ void orderManagementSystem(OrderManager &orderManager)
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
             // Check the API response for success
-            auto jsonResponse = nlohmann::json::parse(response, nullptr, false);
-            if (jsonResponse.is_discarded() || !jsonResponse.contains("result"))
+            simdjson::ondemand::parser parser;
+            simdjson::ondemand::document jsonResponse = parser.iterate(response);
+
+            try
             {
-                std::cerr << "Order modification failed. Response: " << jsonResponse.dump(4) << "\n";
+                if (jsonResponse["result"].error() != simdjson::SUCCESS)
+                {
+                    std::cerr << "Order modification failed. Response: " << response << "\n";
+                }
+                else
+                {
+                    std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
+                    std::cout << "Response: " << response << "\n";
+                }
             }
-            else
+            catch (const simdjson::simdjson_error &e)
             {
-                std::cout << "Order modified successfully. Latency: " << latency << " ms\n";
-                std::cout << "Response: " << jsonResponse.dump(4) << "\n";
+                std::cerr << "Order modification failed. Response: " << response << "\n";
             }
             break;
         }
@@ -298,7 +324,7 @@ void orderManagementSystem(OrderManager &orderManager)
         case EXIT:
         {
             std::cout << "Exiting order management system...\n";
-            std::cout << "Memory usage" << getValue() << "KB\n";
+            std::cout << "Memory usage: " << getValue() << "KB\n";
             std::cout << "CPU usage: " << getCurrentValue() << "%\n";
             return;
         }

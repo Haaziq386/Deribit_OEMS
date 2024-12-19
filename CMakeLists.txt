@@ -16,6 +16,15 @@ find_package(OpenSSL REQUIRED)
 include_directories(${PROJECT_SOURCE_DIR}/include) # Your project's include directory
 include_directories(${Boost_INCLUDE_DIRS})         # Boost headers
 
+include(FetchContent)
+
+FetchContent_Declare(
+  simdjson
+  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_TAG  tags/v3.6.0
+  GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(simdjson)
 # Source files
 file(GLOB SOURCES "src/*.cpp") # Include all .cpp files in src/
 
@@ -29,6 +38,7 @@ target_link_libraries(deribit_order_management PRIVATE
     Boost::system 
     Boost::thread 
     nlohmann_json::nlohmann_json
+    simdjson
     ${OPENSSL_LIBRARIES}
 )
 

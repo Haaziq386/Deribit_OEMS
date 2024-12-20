@@ -2,6 +2,8 @@
 #include "utils.hpp"
 #include "websocket_con.hpp"
 
+double maxCPUUTIL = 0.0;
+int maxMEMUTIL = 0;
 int parseLine(char *line)
 {
     // This assumes that a digit will be found and the line ends in " Kb".
@@ -175,6 +177,8 @@ void orderManagementSystem(OrderManager &orderManager)
             {
                 std::cerr << "Order placement failed. Response: " << response << "\n";
             }
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case CANCEL_ORDER:
@@ -208,6 +212,8 @@ void orderManagementSystem(OrderManager &orderManager)
             {
                 std::cerr << "Order cancellation failed. Response: " << response << "\n";
             }
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case MODIFY_ORDER:
@@ -247,6 +253,8 @@ void orderManagementSystem(OrderManager &orderManager)
             {
                 std::cerr << "Order modification failed. Response: " << response << "\n";
             }
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case GET_ORDERBOOK:
@@ -261,6 +269,8 @@ void orderManagementSystem(OrderManager &orderManager)
             auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             std::cout << "Market Data processing Latency: " << latency << " ms\n";
             std::cout << "Orderbook: " << UtilityNamespace::beautifyJSON(response) << "\n";
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case GET_POSITIONS:
@@ -271,6 +281,8 @@ void orderManagementSystem(OrderManager &orderManager)
 
             std::string response = orderManager.getCurrentPositions(currency);
             std::cout << "Positions: " << UtilityNamespace::beautifyJSON(response) << "\n";
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case VIEW_OPEN_ORDERS:
@@ -284,6 +296,8 @@ void orderManagementSystem(OrderManager &orderManager)
             std::cout << "Open Orders:\n"
                       << UtilityNamespace::beautifyJSON(response) << "\n";
             std::cout << "Latency: " << latency << " ms\n";
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case VIEW_TRADE_HISTORY:
@@ -300,6 +314,8 @@ void orderManagementSystem(OrderManager &orderManager)
             std::cout << "Trade History:\n"
                       << UtilityNamespace::beautifyJSON(response) << "\n";
             std::cout << "Latency: " << latency << " ms\n";
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case CONNECT:
@@ -319,13 +335,15 @@ void orderManagementSystem(OrderManager &orderManager)
 
             std::thread managerThread(&WebSocketClient::manageWebSocket, &wsClient);
             managerThread.join();
+            maxCPUUTIL = std::max(maxCPUUTIL, getCurrentValue());
+            maxMEMUTIL = std::max(maxMEMUTIL, getValue());
             break;
         }
         case EXIT:
         {
             std::cout << "Exiting order management system...\n";
-            std::cout << "Memory usage: " << getValue() << "KB\n";
-            std::cout << "CPU usage: " << getCurrentValue() << "%\n";
+            std::cout << "Memory usage: " << std::max(maxMEMUTIL, getValue()) << "KB\n";
+            std::cout << "CPU usage: " << std::max(maxCPUUTIL, getCurrentValue()) << "%\n";
             return;
         }
         default:

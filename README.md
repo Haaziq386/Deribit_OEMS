@@ -13,7 +13,7 @@
 
 ## Video Demo
 
-*Coming Soon*
+https://drive.google.com/file/d/1VEZIMYgDX3RalEK3iySwAn7Rg99RjZQU/view?usp=sharing
 
 ---
 

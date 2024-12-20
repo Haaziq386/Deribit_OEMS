@@ -4,7 +4,10 @@
 
 ## Screenshots
 
-*Coming Soon*
+![OEMS](https://github.com/user-attachments/assets/5e47e40d-7f26-4504-8900-cf02844ac07a)
+![Websocket CLient](https://github.com/user-attachments/assets/1e1d8fa5-d317-467c-83cb-6f9b1f74dfde)
+![Websocket Server](https://github.com/user-attachments/assets/8c3743a8-0fab-4212-92ac-c12714f64181)
+
 
 ---
 
@@ -32,7 +35,6 @@
 ### Libraries Used
 
 #### Core Libraries
-- **ncurses:** For terminal-based UI.
 - **simdjson:** For efficient JSON parsing.
 - **libcurl:** For REST API interactions.
 
@@ -41,7 +43,7 @@
 
 ---
 
-## Installation
+## Usage
 
 1. Clone this repository:
    ```bash
@@ -65,7 +67,7 @@
 4. For the server:
    ```bash
    cd server/
-   g++ websocket_server.cpp utils.cpp -lcurl
+   g++ websocket_server.cpp utils.cpp threadpool.cpp -lcurl
    ./a.out
    ```
 
@@ -90,25 +92,8 @@ The app follows a modular code structure for maintainability and scalability:
 ### Design Choices
 
 - **Modular Components:** Separate files for order management, WebSocket client, and utility functions.
-- **Real-time Data:** Integrated ncurses for a responsive terminal interface.
+- **Real-time Data:** Simple and responsive UI.
 - **Error Handling:** Robust exception handling for JSON parsing and network communication.
-
----
-
-## Usage
-
-1. Start the server:
-   ```bash
-   cd server/
-   ./a.out
-   ```
-
-2. Launch the order management system:
-   ```bash
-   ./deribit_order_management
-   ```
-
-3. Follow the on-screen instructions to interact with the system.
 
 ---
 

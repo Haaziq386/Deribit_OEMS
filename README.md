@@ -106,8 +106,8 @@ The app follows a modular code structure for maintainability and scalability:
 ### Other Limitations
 - Limited testing on non-Linux platforms.
 - Requires manual server setup for WebSocket functionality.
-
+- Requires good internet speed
 ---
 
-## Made with ❤️
+## Made with ❤️ for intern assignmnet of GoQuant
 
